@@ -1,0 +1,7 @@
+  .editor-placeholder {
+    color: #888;
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    pointer-events: none;
+  }

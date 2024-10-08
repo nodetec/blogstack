@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { CodeNode } from "@lexical/code";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
@@ -26,6 +26,10 @@ import {
   type EditorState,
 } from "lexical";
 import { type Link, type Root } from "mdast";
+
+import { ToolbarPlugin } from "./ToolbarPlugin";
+
+import "./style.css";
 
 // LexicalOnChangePlugin!
 function onChange(editorState: EditorState) {
@@ -61,45 +65,69 @@ function onError(error: unknown) {
 }
 
 export default function Editor() {
+  const [isClient, setIsClient] = useState(false);
+  const [showToolbar, setShowToolbar] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
   const initialConfig: InitialConfigType = {
     namespace: "NoteStackEditor",
     // theme: getTheme("dark"),
     editorState: () =>
-      $convertFromMarkdownString(
-        "# Don't write anything here yet!",
-        TRANSFORMERS,
-      ),
+      $convertFromMarkdownString("# Start writing!", TRANSFORMERS),
     nodes: [
       HorizontalRuleNode,
-      //   // BannerNode,
+      // BannerNode,
       HeadingNode,
       // ImageNode,
-      // QuoteNode,
-      // CodeNode,
-      // ListNode,
-      // ListItemNode,
-      // LinkNode,
-      // AutoLinkNode,
+      QuoteNode,
+      CodeNode,
+      ListNode,
+      ListItemNode,
+      LinkNode,
+      AutoLinkNode,
     ],
     onError,
   };
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
-      <LexicalComposer initialConfig={initialConfig}>
-        <RichTextPlugin
-          contentEditable={
-            <ContentEditable className="prose h-full w-full max-w-none overflow-auto border border-red-500 p-12 caret-foreground dark:prose-invert selection:bg-blue-300/25 focus:outline-none" />
-          }
-          ErrorBoundary={LexicalErrorBoundary}
-        />
+    <LexicalComposer initialConfig={initialConfig}>
+      <div className="h-[90vh] flex items-center justify-center border border-border">
+        <div className="border border-gray-300 p-4 rounded-md h-[80vh] w-[80vw] max-w-[800px] flex flex-col bg-secondary relative overflow-hidden">
+          {/* Toolbar Toggle Button */}
+          <button
+            className="self-end mb-2 p-2 bg-blue-600 text-white border-none rounded cursor-pointer hover:bg-blue-800"
+            onClick={() => setShowToolbar((prev) => !prev)}
+          >
+            {showToolbar ? "Hide Toolbar" : "Show Toolbar"}
+          </button>
 
-        <OnChangePlugin onChange={onChange} />
-        {/* <MarkdownShortcutPlugin transformers={TRANSFORMERS} /> */}
+          {/* Rich Text Editor */}
+          <div className="relative flex-1 flex overflow-y-auto">
+            <RichTextPlugin
+              contentEditable={<ContentEditable className="flex-1 outline-none overflow-auto p-2 max-h-full" />}
+              placeholder={<div className="text-gray-500 absolute top-2 left-2 pointer-events-none">Enter some text...</div>}
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+          </div>
 
-        <HistoryPlugin />
-        <MyCustomAutoFocusPlugin />
-      </LexicalComposer>
-    </div>
+          {/* Toolbar Plugin */}
+          {showToolbar && <ToolbarPlugin />}
+
+          {/* Plugins */}
+          <OnChangePlugin onChange={onChange} />
+          {/* <MarkdownShortcutPlugin transformers={TRANSFORMERS} /> */}
+
+          <HistoryPlugin />
+          <MyCustomAutoFocusPlugin />
+        </div>
+      </div>
+    </LexicalComposer>
   );
 }
